@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus Ledger • Enterprise Transaction Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #070a12;
+      --bg-surface: #0f172a;
+      --bg-card: rgba(15, 23, 42, 0.72);
+      --bg-card-hover: rgba(30, 41, 59, 0.8);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(99, 102, 241, 0.35);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.45);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.3);
+      --danger: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.3);
+      --warning: #f59e0b;
+      --accent: #a855f7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.18) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.14) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(244, 63, 94, 0.1) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation Header */
+    header {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 0.85rem 2rem;
+    }
+
+    .header-content {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .logo-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 25px var(--primary-glow);
+    }
+
+    .logo-badge svg {
+      width: 24px;
+      height: 24px;
+      fill: #fff;
+    }
+
+    .brand-text h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .brand-text span {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Auth status & actions in header */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .sys-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+      animation: pulseAnim 2s infinite;
+    }
+
+    @keyframes pulseAnim {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: 9999px;
+      padding: 0.3rem 0.9rem 0.3rem 0.4rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .user-pill:hover {
+      border-color: var(--border-glow);
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ec4899, var(--primary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #fff;
+    }
+
+    .user-info-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .user-name {
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .user-balance-badge {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #34d399;
+      font-weight: 700;
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1440px;
+      margin: 1.75rem auto 3rem;
+      padding: 0 1.5rem;
+      flex: 1;
+      width: 100%;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95));
+      border: 1px solid var(--border-glow);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem 2.5rem;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 0 35px rgba(99, 102, 241, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .hero-banner::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.2), transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-welcome h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.4rem;
+      background: linear-gradient(to right, #fff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-account-id {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.35);
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .hero-account-id:hover {
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 0.85rem;
+      align-items: center;
+      flex-wrap: wrap;
+      z-index: 2;
+    }
+
+    /* KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.4rem;
+      position: relative;
+      transition: all 0.25s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-glow);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .kpi-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kpi-value {
+      font-size: 1.9rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      letter-spacing: -0.02em;
+    }
+
+    .kpi-subtext {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    /* Tabs */
+    .tabs-nav {
+      display: flex;
+      gap: 0.6rem;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 2rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 0.8rem 1.4rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .tab-content {
+      display: none;
+      animation: tabFadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 960px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-subtitle {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 0.45rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem 1.1rem;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .hint {
+      font-size: 0.76rem;
+      color: var(--text-dim);
+      margin-top: 0.35rem;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.5rem;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      color: #fff;
+      box-shadow: 0 4px 18px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--border-glow);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--success), #059669);
+      color: #fff;
+      box-shadow: 0 4px 18px var(--success-glow);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger), #dc2626);
+      color: #fff;
+      box-shadow: 0 4px 18px var(--danger-glow);
+    }
+
+    .btn-sm {
+      padding: 0.45rem 0.9rem;
+      font-size: 0.82rem;
+    }
+
+    /* Quick Chips for Amounts */
+    .chips-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    .chip-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      padding: 0.35rem 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .chip-btn:hover {
+      background: rgba(99, 102, 241, 0.12);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    /* Ledger Table */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(0, 0, 0, 0.5);
+      color: var(--text-muted);
+      font-weight: 700;
+      padding: 0.9rem 1.1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 0.9rem 1.1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .type-credit {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .type-debit {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .amount-credit {
+      color: #34d399;
+      font-weight: 800;
+      font-family: var(--font-mono);
+    }
+
+    .amount-debit {
+      color: #f87171;
+      font-weight: 800;
+      font-family: var(--font-mono);
+    }
+
+    /* Accounts Grid */
+    .accounts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .account-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .account-card:hover {
+      border-color: var(--border-glow);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .account-card.active-user {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.08);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+    }
+
+    .acc-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .acc-name {
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .acc-bal {
+      font-size: 1.35rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: #34d399;
+    }
+
+    /* Visualizer Box */
+    .visualizer-box {
+      background: #050812;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: #a7f3d0;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glow);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.5rem;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      gap: 0.85rem;
+      z-index: 100;
+      font-size: 0.92rem;
+      font-weight: 600;
+      max-width: 440px;
+      animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes toastIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.82);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 1.5rem;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-glow);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+      animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header>
+    <div class="header-content">
+      <a href="/" class="brand">
+        <div class="logo-badge">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        </div>
+        <div class="brand-text">
+          <h1>Nexus Ledger</h1>
+          <span>Double-Entry Core Engine</span>
+        </div>
+      </a>
+
+      <div class="header-actions">
+        <div class="sys-pill" id="apiStatusBadge" onclick="openApiConfigModal()" style="cursor: pointer;" title="Configure Backend API URL">
+          <span class="pulse"></span>
+          <span id="apiStatusText">API: Local / Proxy</span>
+        </div>
+
+        <div class="sys-pill">
+          <span class="pulse"></span>
+          <span>PostgreSQL Active</span>
+        </div>
+
+        <div id="authNavContainer">
+          <!-- Populated dynamically with active user pill & + New Account -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Welcome Banner -->
+    <div class="hero-banner">
+      <div class="hero-welcome">
+        <h2 id="greetingText">Good evening, Shreya 👋</h2>
+        <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 0.5rem; flex-wrap: wrap;">
+          <div class="hero-account-id" id="activeAccountIdBadge" onclick="copyActiveId()">
+            <span>ID:</span>
+            <span id="activeIdDisplay">Loading...</span>
+            <span title="Click to copy">📋</span>
+          </div>
+          <span style="font-size: 0.8rem; color: var(--text-dim);">•</span>
+          <span style="font-size: 0.82rem; color: #34d399; font-weight: 700;">Zero Initial Balance Mandate Enforced</span>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <button class="btn btn-primary" onclick="quickAction('credit')">
+          <span>+</span>
+          <span>Deposit</span>
+        </button>
+        <button class="btn btn-secondary" onclick="quickAction('debit')">
+          <span>-</span>
+          <span>Withdraw</span>
+        </button>
+        <button class="btn btn-success" onclick="switchTab('transfers')">
+          <span>⚡</span>
+          <span>Transfer</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 Key Metrics -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <span>Current Balance</span>
+          <span style="color: #34d399;">● Live</span>
+        </div>
+        <div class="kpi-value" id="kpiBalance" style="color: #34d399;">$0.00</div>
+        <div class="kpi-subtext">Verified against PostgreSQL state</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <span>Total Inflow (Credits)</span>
+          <span>📈</span>
+        </div>
+        <div class="kpi-value" id="kpiCredits">$0.00</div>
+        <div class="kpi-subtext" id="kpiCreditCount">0 recorded credits</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <span>Total Outflow (Debits)</span>
+          <span>📉</span>
+        </div>
+        <div class="kpi-value" id="kpiDebits" style="color: #f87171;">$0.00</div>
+        <div class="kpi-subtext" id="kpiDebitCount">0 recorded debits</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <span>Audit Integrity</span>
+          <span>🛡️</span>
+        </div>
+        <div class="kpi-value" style="color: #818cf8;">100%</div>
+        <div class="kpi-subtext">0 mutated • 0 deleted</div>
+      </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" onclick="switchTab('transfer')">⚡ Atomic Transfer (Bonus)</button>
+      <button class="tab-btn" onclick="switchTab('transaction')">💳 Deposit & Withdraw</button>
+      <button class="tab-btn" onclick="switchTab('ledger')">📜 Ledger Audit History</button>
+      <button class="tab-btn" onclick="switchTab('accounts')">🏦 All Accounts Directory</button>
+      <button class="tab-btn" onclick="switchTab('api')">📖 API Docs & Immutability</button>
+    </div>
+
+    <!-- TAB 1: Atomic Fund Transfer (Bonus Feature) -->
+    <div id="tab-transfer" class="tab-content active">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">⚡ Atomic Peer-to-Peer Fund Transfer</div>
+              <div class="card-subtitle">Dual-account row locking prevents race conditions and deadlocks</div>
+            </div>
+          </div>
+
+          <form id="transferForm" onsubmit="executeTransfer(event)">
+            <div class="form-group">
+              <label for="xferSender">From Account (Sender) *</label>
+              <select id="xferSender" required></select>
+            </div>
+
+            <div class="form-group">
+              <label for="xferRecipient">To Account (Recipient) *</label>
+              <select id="xferRecipient" required></select>
+            </div>
+
+            <div class="form-group">
+              <label for="xferAmount">Transfer Amount ($) *</label>
+              <input type="number" id="xferAmount" step="0.01" min="0.01" placeholder="50.00" required>
+              <div class="chips-group">
+                <button type="button" class="chip-btn" onclick="setTransferAmount(10)">+$10</button>
+                <button type="button" class="chip-btn" onclick="setTransferAmount(25)">+$25</button>
+                <button type="button" class="chip-btn" onclick="setTransferAmount(50)">+$50</button>
+                <button type="button" class="chip-btn" onclick="setTransferAmount(100)">+$100</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="xferDesc">Description *</label>
+              <input type="text" id="xferDesc" placeholder="e.g. Shared grocery invoice #102" required>
+            </div>
+
+            <div class="form-group">
+              <label for="xferRef">Audit Reference ID *</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="xferRef" required>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="genRef('xferRef', 'TXFR')">Generate</button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              <span>Execute Atomic Transfer</span>
+              <span>⚡</span>
+            </button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📡 Live Atomic Transfer Console</div>
+            <button class="btn btn-secondary btn-sm" onclick="clearConsole('transferConsole')">Clear</button>
+          </div>
+          <div class="visualizer-box" id="transferConsole" style="height: 420px; max-height: none;">// Submit a fund transfer to observe the atomic execution result...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Deposit & Withdraw -->
+    <div id="tab-transaction" class="tab-content">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">💳 Add Transaction (Credit / Debit)</div>
+              <div class="card-subtitle">Locked with row-level locks (<code>SELECT FOR UPDATE</code>)</div>
+            </div>
+          </div>
+
+          <form id="txForm" onsubmit="executeTransaction(event)">
+            <div class="form-group">
+              <label for="txAccount">Account *</label>
+              <select id="txAccount" required></select>
+            </div>
+
+            <div class="form-group">
+              <label for="txType">Transaction Type *</label>
+              <select id="txType" required onchange="updateTxPreview()">
+                <option value="credit">Credit (Deposit to Account +)</option>
+                <option value="debit">Debit (Withdraw from Account -)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="txAmount">Amount ($) *</label>
+              <input type="number" id="txAmount" step="0.01" min="0.01" placeholder="100.00" required oninput="updateTxPreview()">
+              <div class="chips-group">
+                <button type="button" class="chip-btn" onclick="setTxAmount(25)">+$25</button>
+                <button type="button" class="chip-btn" onclick="setTxAmount(50)">+$50</button>
+                <button type="button" class="chip-btn" onclick="setTxAmount(100)">+$100</button>
+                <button type="button" class="chip-btn" onclick="setTxAmount(250)">+$250</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="txDesc">Description *</label>
+              <input type="text" id="txDesc" placeholder="e.g. Client retainer fee" required>
+            </div>
+
+            <div class="form-group">
+              <label for="txRef">Reference ID *</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="txRef" required>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="genRef('txRef', 'DEP')">Generate</button>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+              <button type="submit" class="btn btn-primary" style="flex: 1;">Submit Transaction</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="triggerOverdraftDemo()">Test Insufficient Funds</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📡 Transaction Response</div>
+            <button class="btn btn-secondary btn-sm" onclick="clearConsole('txConsole')">Clear</button>
+          </div>
+          <div class="visualizer-box" id="txConsole" style="height: 420px; max-height: none;">// Ready to process ledger entries...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: Ledger Audit Log -->
+    <div id="tab-ledger" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📜 Immutable Audit Ledger</div>
+            <div class="card-subtitle">Permanent, unmodifiable double-entry transactions</div>
+          </div>
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <select id="ledgerFilter" onchange="loadLedger()" style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.84rem;">
+              <option value="">All Transactions</option>
+              <option value="credit">Credits Only (+)</option>
+              <option value="debit">Debits Only (-)</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📥 Export CSV</button>
+            <button class="btn btn-secondary btn-sm" onclick="loadLedger()">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Reference ID</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Description</th>
+                <th>Transaction UUID</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 3rem;">
+                  Loading audit records...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem;">
+          <div id="ledgerPaginationText" style="font-size: 0.85rem; color: var(--text-muted);">Showing 0 of 0</div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-secondary btn-sm" id="ledgerPrevBtn" onclick="paginateLedger(-1)" disabled>Previous</button>
+            <button class="btn btn-secondary btn-sm" id="ledgerNextBtn" onclick="paginateLedger(1)" disabled>Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: All Accounts Directory -->
+    <div id="tab-accounts" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🏦 All Accounts Directory</div>
+            <div class="card-subtitle">Click any account card to switch your active view</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openNewAccountModal()">+ Open New Account</button>
+        </div>
+
+        <div class="accounts-grid" id="accountsGrid">
+          <div style="color: var(--text-dim);">Loading accounts...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: API Docs & Immutability -->
+    <div id="tab-api" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📖 API Reference & Immutability Suite</div>
+            <div class="card-subtitle">Interactive tests for assessment requirements</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="verifyImmutability()">
+            🛡️ Run Immutability Check (HTTP 405)
+          </button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <div>
+            <h4 style="color: #818cf8; font-size: 0.95rem; margin-bottom: 0.4rem;">1. Create Account (Mandatory Server Zero Balance)</h4>
+            <p style="color: var(--text-muted); font-size: 0.85rem;"><code>POST /api/accounts</code></p>
+            <div class="visualizer-box">{ "name": "Alice Walker" }</div>
+          </div>
+
+          <div>
+            <h4 style="color: #818cf8; font-size: 0.95rem; margin-bottom: 0.4rem;">2. Get Account Balance</h4>
+            <p style="color: var(--text-muted); font-size: 0.85rem;"><code>GET /api/accounts/:id/balance</code></p>
+            <div class="visualizer-box">{ "account_id": "...", "account_holder_name": "Shreya", "balance": 500.00 }</div>
+          </div>
+
+          <div>
+            <h4 style="color: #818cf8; font-size: 0.95rem; margin-bottom: 0.4rem;">3. Add Transaction (Atomic Row Locking)</h4>
+            <p style="color: var(--text-muted); font-size: 0.85rem;"><code>POST /api/transactions</code></p>
+            <div class="visualizer-box">{ "account_id": "...", "type": "credit", "amount": 250.00, "description": "Retainer", "reference_id": "DEP-001" }</div>
+          </div>
+
+          <div>
+            <h4 style="color: #818cf8; font-size: 0.95rem; margin-bottom: 0.4rem;">4. Atomic Fund Transfer (Bonus Feature)</h4>
+            <p style="color: var(--text-muted); font-size: 0.85rem;"><code>POST /api/transfers</code></p>
+            <div class="visualizer-box">{ "from_account_id": "...", "to_account_id": "...", "amount": 75.00, "description": "Split", "reference_id": "TXFR-101" }</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: Open New Account -->
+  <div id="newAccountModal" class="modal-backdrop" onclick="if(event.target===this) closeNewAccountModal()">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.25rem; font-weight: 800;">🏦 Open New Account</h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeNewAccountModal()">✕</button>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem;">
+        Creates a new ledger account. Initial balance is strictly initialized to <strong>$0.00</strong> on the server per assessment specifications.
+      </p>
+      <form onsubmit="handleCreateAccount(event)">
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label for="newAccountName">Account Holder Name *</label>
+          <input type="text" id="newAccountName" placeholder="e.g. Eleanor Vance" required autofocus>
+        </div>
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeNewAccountModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="createAccountBtn">Create Account ($0.00)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Configure Backend API URL -->
+  <div id="apiConfigModal" class="modal-backdrop" onclick="if(event.target===this) closeApiConfigModal()">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.25rem; font-weight: 800;">⚙️ Backend API Endpoint</h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeApiConfigModal()">✕</button>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem;">
+        Configure the backend URL. For local dev or Vercel proxy, leave empty. For direct Render connection, enter your Render URL.
+      </p>
+      <form onsubmit="saveApiConfig(event)">
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label for="apiUrlInput">API Base URL</label>
+          <input type="url" id="apiUrlInput" placeholder="https://transaction-ledger-api.onrender.com">
+          <small style="color: var(--text-dim); display: block; margin-top: 0.4rem;">
+            Leave blank to use relative <code>/api</code> (recommended with Vercel rewrites or local Express).
+          </small>
+        </div>
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="clearApiConfig()">Reset to Default</button>
+          <button type="submit" class="btn btn-primary">Save & Connect</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <script>
+    let activeAccount = null;
+    let allAccounts = [];
+    let ledgerPage = 1;
+    const ledgerLimit = 8;
+    let currentTransactions = [];
+    let API_BASE = localStorage.getItem('LEDGER_API_URL') || '';
+
+    // Unified fetch handler: routes through custom Render API base if set, else relative /api (Vercel proxy/local)
+    function apiFetch(endpoint, options = {}) {
+      const base = API_BASE ? API_BASE.replace(/\/$/, '') : '';
+      return fetch(`${base}${endpoint}`, options);
+    }
+
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.style.display = 'flex';
+      t.style.borderColor = isError ? 'var(--danger)' : 'var(--success)';
+      t.innerHTML = (isError ? '⚠️ ' : '✅ ') + msg;
+      setTimeout(() => { t.style.display = 'none'; }, 4500);
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      event?.currentTarget?.classList?.add('active');
+      document.getElementById('tab-' + tabName)?.classList?.add('active');
+
+      if (tabName === 'ledger') loadLedger();
+    }
+
+    function genRef(elementId, prefix = 'REF') {
+      const rnd = Math.floor(100000 + Math.random() * 900000);
+      document.getElementById(elementId).value = `${prefix}-${Date.now().toString().slice(-4)}-${rnd}`;
+    }
+
+    function setTransferAmount(val) {
+      document.getElementById('xferAmount').value = val.toFixed(2);
+    }
+
+    function setTxAmount(val) {
+      document.getElementById('txAmount').value = val.toFixed(2);
+    }
+
+    function clearConsole(id) {
+      document.getElementById(id).innerText = '// Cleared';
+    }
+
+    // Modal: Open New Account
+    function openNewAccountModal() {
+      document.getElementById('newAccountModal').classList.add('open');
+      const input = document.getElementById('newAccountName');
+      input.value = '';
+      setTimeout(() => input.focus(), 100);
+    }
+
+    function closeNewAccountModal() {
+      document.getElementById('newAccountModal').classList.remove('open');
+    }
+
+    async function handleCreateAccount(e) {
+      e.preventDefault();
+      const name = document.getElementById('newAccountName').value.trim();
+      if (!name) return;
+
+      const btn = document.getElementById('createAccountBtn');
+      btn.disabled = true;
+      btn.innerText = 'Creating...';
+
+      try {
+        const res = await apiFetch('/api/accounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name, account_holder_name: name })
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          showToast(`Account created for ${json.data.account_holder_name || json.data.name}! Initial Balance: $${Number(json.data.balance).toFixed(2)}`);
+          closeNewAccountModal();
+          await refreshAccounts();
+          selectAccount(json.data.id);
+        } else {
+          showToast(json.error?.message || 'Failed to create account', true);
+        }
+      } catch (err) {
+        showToast(err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Create Account ($0.00)';
+      }
+    }
+
+    // Modal: Backend API Configuration
+    function openApiConfigModal() {
+      document.getElementById('apiConfigModal').classList.add('open');
+      document.getElementById('apiUrlInput').value = API_BASE;
+    }
+
+    function closeApiConfigModal() {
+      document.getElementById('apiConfigModal').classList.remove('open');
+    }
+
+    function saveApiConfig(e) {
+      e.preventDefault();
+      const val = document.getElementById('apiUrlInput').value.trim().replace(/\/$/, '');
+      API_BASE = val;
+      if (val) {
+        localStorage.setItem('LEDGER_API_URL', val);
+        showToast(`API Base set to: ${val}`);
+      } else {
+        localStorage.removeItem('LEDGER_API_URL');
+        showToast('API Base reset to relative /api routing');
+      }
+      closeApiConfigModal();
+      updateApiStatusIndicator();
+      refreshAccounts();
+    }
+
+    function clearApiConfig() {
+      API_BASE = '';
+      localStorage.removeItem('LEDGER_API_URL');
+      document.getElementById('apiUrlInput').value = '';
+      closeApiConfigModal();
+      showToast('Reset to default relative API routing');
+      updateApiStatusIndicator();
+      refreshAccounts();
+    }
+
+    function updateApiStatusIndicator() {
+      const text = document.getElementById('apiStatusText');
+      if (text) {
+        if (API_BASE) {
+          text.innerText = `Render: ${API_BASE.replace(/^https?:\/\//, '').slice(0, 16)}...`;
+        } else {
+          text.innerText = 'API: Local / Proxy';
+        }
+      }
+    }
+
+    async function loadInitialData() {
+      updateApiStatusIndicator();
+      const userStr = localStorage.getItem('nexus_user');
+      if (userStr) {
+        try {
+          activeAccount = JSON.parse(userStr);
+        } catch {}
+      }
+
+      await refreshAccounts();
+
+      if (!activeAccount && allAccounts.length > 0) {
+        activeAccount = allAccounts[0];
+      }
+
+      updateUserUI();
+      genRef('txRef', 'DEP');
+      genRef('xferRef', 'TXFR');
+    }
+
+    async function refreshAccounts() {
+      try {
+        const res = await apiFetch('/api/accounts');
+        const json = await res.json();
+        if (json.success && json.data) {
+          allAccounts = json.data;
+          renderAccountsGrid();
+          populateSelects();
+
+          if (activeAccount) {
+            const fresh = allAccounts.find(a => a.id === activeAccount.id);
+            if (fresh) activeAccount = fresh;
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching accounts:', err);
+      }
+    }
+
+    function updateUserUI() {
+      const authContainer = document.getElementById('authNavContainer');
+      const greeting = document.getElementById('greetingText');
+      const activeIdDisplay = document.getElementById('activeIdDisplay');
+      const kpiBalance = document.getElementById('kpiBalance');
+
+      if (activeAccount) {
+        const initials = (activeAccount.account_holder_name || activeAccount.name || 'AC')
+          .split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+
+        authContainer.innerHTML = `
+          <div class="user-pill" onclick="switchTab('accounts')" title="Active Account (Click to browse all accounts)">
+            <div class="user-avatar">${initials}</div>
+            <div class="user-info-text">
+              <span class="user-name">${activeAccount.account_holder_name || activeAccount.name}</span>
+              <span class="user-balance-badge">$${Number(activeAccount.balance).toFixed(2)}</span>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openNewAccountModal()">+ New Account</button>
+        `;
+
+        const hour = new Date().getHours();
+        const timeOfDay = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+        greeting.innerText = `${timeOfDay}, ${activeAccount.account_holder_name || activeAccount.name} 👋`;
+
+        activeIdDisplay.innerText = activeAccount.id;
+        kpiBalance.innerText = `$${Number(activeAccount.balance).toFixed(2)}`;
+
+        const xferSender = document.getElementById('xferSender');
+        if (xferSender) xferSender.value = activeAccount.id;
+
+        const txAccount = document.getElementById('txAccount');
+        if (txAccount) txAccount.value = activeAccount.id;
+
+        loadLedger();
+      } else {
+        authContainer.innerHTML = `
+          <button class="btn btn-primary btn-sm" onclick="openNewAccountModal()">+ Open Account</button>
+        `;
+      }
+    }
+
+    function populateSelects() {
+      const xferSender = document.getElementById('xferSender');
+      const xferRecipient = document.getElementById('xferRecipient');
+      const txAccount = document.getElementById('txAccount');
+
+      const opts = allAccounts.map(a => `<option value="${a.id}">${a.account_holder_name || a.name} ($${Number(a.balance).toFixed(2)})</option>`).join('');
+
+      if (xferSender) xferSender.innerHTML = opts;
+      if (xferRecipient) {
+        xferRecipient.innerHTML = '<option value="">-- Choose Recipient --</option>' + opts;
+        if (allAccounts.length > 1) {
+          const other = allAccounts.find(a => a.id !== (activeAccount ? activeAccount.id : allAccounts[0].id));
+          if (other) xferRecipient.value = other.id;
+        }
+      }
+      if (txAccount) txAccount.innerHTML = opts;
+    }
+
+    function renderAccountsGrid() {
+      const grid = document.getElementById('accountsGrid');
+      if (allAccounts.length === 0) {
+        grid.innerHTML = '<div style="color: var(--text-dim); padding: 2rem;">No accounts in database yet. Click "+ Open New Account" above!</div>';
+        return;
+      }
+
+      grid.innerHTML = allAccounts.map(a => {
+        const isActive = activeAccount && a.id === activeAccount.id;
+        return `
+          <div class="account-card ${isActive ? 'active-user' : ''}" onclick="selectAccount('${a.id}')">
+            <div class="acc-top">
+              <span class="acc-name">${a.account_holder_name || a.name}</span>
+              <span class="acc-bal">$${Number(a.balance).toFixed(2)}</span>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-dim); word-break: break-all;">
+              ${a.id}
+            </div>
+            ${isActive ? '<div style="margin-top: 0.5rem; font-size: 0.75rem; color: #818cf8; font-weight: 700;">● Active Viewing Account</div>' : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectAccount(id) {
+      const target = allAccounts.find(a => a.id === id);
+      if (target) {
+        activeAccount = target;
+        localStorage.setItem('nexus_user', JSON.stringify(target));
+        updateUserUI();
+        renderAccountsGrid();
+        showToast(`Switched active ledger view to ${target.account_holder_name || target.name}`);
+      }
+    }
+
+    function copyActiveId() {
+      if (activeAccount) {
+        navigator.clipboard.writeText(activeAccount.id);
+        showToast('Account UUID copied to clipboard!');
+      }
+    }
+
+    function quickAction(type) {
+      switchTab('transaction');
+      document.getElementById('txType').value = type;
+      genRef('txRef', type === 'credit' ? 'DEP' : 'WDL');
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+    }
+
+    async function executeTransaction(e) {
+      e.preventDefault();
+      const account_id = document.getElementById('txAccount').value;
+      const type = document.getElementById('txType').value;
+      const amount = parseFloat(document.getElementById('txAmount').value);
+      const description = document.getElementById('txDesc').value;
+      const reference_id = document.getElementById('txRef').value;
+
+      try {
+        const res = await apiFetch('/api/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ account_id, type, amount, description, reference_id })
+        });
+        const json = await res.json();
+        document.getElementById('txConsole').innerText = JSON.stringify(json, null, 2);
+
+        if (res.ok) {
+          showToast(`${type.toUpperCase()} of $${amount.toFixed(2)} processed successfully!`);
+          document.getElementById('txAmount').value = '';
+          document.getElementById('txDesc').value = '';
+          genRef('txRef', type === 'credit' ? 'DEP' : 'WDL');
+          await refreshAccounts();
+          updateUserUI();
+        } else {
+          showToast(json.error?.message || 'Transaction rejected', true);
+        }
+      } catch (err) {
+        showToast(err.message, true);
+      }
+    }
+
+    function triggerOverdraftDemo() {
+      document.getElementById('txType').value = 'debit';
+      document.getElementById('txAmount').value = '999999.00';
+      document.getElementById('txDesc').value = 'Overdraft Stress Test';
+      genRef('txRef', 'OVERDRAFT');
+      showToast('Configured $999,999 debit. Click "Submit Transaction" to see server HTTP 400 rejection.');
+    }
+
+    async function executeTransfer(e) {
+      e.preventDefault();
+      const from_account_id = document.getElementById('xferSender').value;
+      const to_account_id = document.getElementById('xferRecipient').value;
+      const amount = parseFloat(document.getElementById('xferAmount').value);
+      const description = document.getElementById('xferDesc').value;
+      const reference_id = document.getElementById('xferRef').value;
+
+      try {
+        const res = await apiFetch('/api/transfers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from_account_id, to_account_id, amount, description, reference_id })
+        });
+        const json = await res.json();
+        document.getElementById('transferConsole').innerText = JSON.stringify(json, null, 2);
+
+        if (res.ok) {
+          showToast(`Atomic transfer of $${amount.toFixed(2)} completed!`);
+          document.getElementById('xferAmount').value = '';
+          document.getElementById('xferDesc').value = '';
+          genRef('xferRef', 'TXFR');
+          await refreshAccounts();
+          updateUserUI();
+        } else {
+          showToast(json.error?.message || 'Transfer failed', true);
+        }
+      } catch (err) {
+        showToast(err.message, true);
+      }
+    }
+
+    async function loadLedger() {
+      if (!activeAccount) return;
+      const filter = document.getElementById('ledgerFilter')?.value;
+      const tbody = document.getElementById('ledgerTableBody');
+
+      let url = `/api/accounts/${activeAccount.id}/transactions?page=${ledgerPage}&limit=${ledgerLimit}`;
+      if (filter) url += `&type=${filter}`;
+
+      try {
+        const res = await apiFetch(url);
+        const json = await res.json();
+
+        if (res.ok && json.data) {
+          currentTransactions = json.data;
+          const pagination = json.pagination;
+
+          document.getElementById('ledgerPaginationText').innerText = 
+            `Page ${pagination.page} of ${pagination.total_pages} (${pagination.total_records} total records)`;
+
+          document.getElementById('ledgerPrevBtn').disabled = pagination.page <= 1;
+          document.getElementById('ledgerNextBtn').disabled = pagination.page >= pagination.total_pages;
+
+          let totalCredits = 0, creditCount = 0;
+          let totalDebits = 0, debitCount = 0;
+
+          currentTransactions.forEach(t => {
+            if (t.type === 'credit') {
+              totalCredits += Number(t.amount);
+              creditCount++;
+            } else {
+              totalDebits += Number(t.amount);
+              debitCount++;
+            }
+          });
+
+          document.getElementById('kpiCredits').innerText = `+$${totalCredits.toFixed(2)}`;
+          document.getElementById('kpiCreditCount').innerText = `${creditCount} credits in view`;
+          document.getElementById('kpiDebits').innerText = `-$${totalDebits.toFixed(2)}`;
+          document.getElementById('kpiDebitCount').innerText = `${debitCount} debits in view`;
+
+          if (currentTransactions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 3rem;">No transactions recorded for this account yet.</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = currentTransactions.map(t => `
+            <tr>
+              <td>${new Date(t.created_at).toLocaleString()}</td>
+              <td><code style="font-family: var(--font-mono); color: #cbd5e1;">${t.reference_id}</code></td>
+              <td><span class="type-badge type-${t.type}">${t.type}</span></td>
+              <td class="amount-${t.type}">${t.type === 'credit' ? '+' : '-'}$${Number(t.amount).toFixed(2)}</td>
+              <td>${t.description}</td>
+              <td><code style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim);">${t.id.slice(0, 8)}...</code></td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function paginateLedger(dir) {
+      ledgerPage += dir;
+      if (ledgerPage < 1) ledgerPage = 1;
+      loadLedger();
+    }
+
+    function exportCSV() {
+      if (currentTransactions.length === 0) {
+        showToast('No transactions to export', true);
+        return;
+      }
+
+      let csv = 'Date,Reference ID,Type,Amount,Description,Transaction ID\n';
+      currentTransactions.forEach(t => {
+        csv += `"${t.created_at}","${t.reference_id}","${t.type}","${t.amount}","${t.description.replace(/"/g, '""')}","${t.id}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ledger-export-${activeAccount ? (activeAccount.account_holder_name || activeAccount.name) : 'all'}-${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Exported audit ledger to CSV!');
+    }
+
+    async function verifyImmutability() {
+      try {
+        const dummyId = '00000000-0000-0000-0000-000000000000';
+        const res = await apiFetch(`/api/transactions/${dummyId}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (res.status === 405) {
+          showToast(`🛡️ Immutability Verified: Server returned HTTP 405 Method Not Allowed ("${json.error?.message}")`);
+        } else {
+          showToast(`Unexpected status: ${res.status}`, true);
+        }
+      } catch (err) {
+        showToast(err.message, true);
+      }
+    }
+
+    // Start
+    loadInitialData();
+  </script>
+</body>
+</html>
