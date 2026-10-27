@@ -1162,13 +1162,28 @@
     let allAccounts = [];
     let ledgerPage = 1;
     const ledgerLimit = 8;
-    let currentTransactions = [];
-    let API_BASE = localStorage.getItem('LEDGER_API_URL') || '';
+    const defaultApiUrl = (window.location.hostname.endsWith('vercel.app') || window.location.hostname.includes('vercel'))
+      ? 'https://transaction-ledger-5uoc.onrender.com'
+      : '';
+    let API_BASE = localStorage.getItem('LEDGER_API_URL') || defaultApiUrl;
 
     // Unified fetch handler: routes through custom Render API base if set, else relative /api (Vercel proxy/local)
     function apiFetch(endpoint, options = {}) {
       const base = API_BASE ? API_BASE.replace(/\/$/, '') : '';
       return fetch(`${base}${endpoint}`, options);
+    }
+
+    async function safeJson(res) {
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch (err) {
+        if (!API_BASE && (window.location.hostname.endsWith('vercel.app') || window.location.hostname.includes('vercel'))) {
+          openApiConfigModal();
+          throw new Error('Render Backend not connected! Please paste your Render API URL in the popup.');
+        }
+        throw new Error(text.slice(0, 100) || 'Invalid server response');
+      }
     }
 
     function showToast(msg, isError = false) {
@@ -1233,7 +1248,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: name, account_holder_name: name })
         });
-        const json = await res.json();
+        const json = await safeJson(res);
         if (res.ok && json.success) {
           showToast(`Account created for ${json.data.account_holder_name || json.data.name}! Initial Balance: $${Number(json.data.balance).toFixed(2)}`);
           closeNewAccountModal();
@@ -1315,12 +1330,20 @@
       updateUserUI();
       genRef('txRef', 'DEP');
       genRef('xferRef', 'TXFR');
+
+      // If running on Vercel and Render URL has not been set yet, prompt user
+      if (!API_BASE && (window.location.hostname.endsWith('vercel.app') || window.location.hostname.includes('vercel'))) {
+        setTimeout(() => {
+          showToast('ℹ️ Please paste your Render API URL to connect to the backend.');
+          openApiConfigModal();
+        }, 700);
+      }
     }
 
     async function refreshAccounts() {
       try {
         const res = await apiFetch('/api/accounts');
-        const json = await res.json();
+        const json = await safeJson(res);
         if (json.success && json.data) {
           allAccounts = json.data;
           renderAccountsGrid();
@@ -1459,7 +1482,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ account_id, type, amount, description, reference_id })
         });
-        const json = await res.json();
+        const json = await safeJson(res);
         document.getElementById('txConsole').innerText = JSON.stringify(json, null, 2);
 
         if (res.ok) {
@@ -1499,7 +1522,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ from_account_id, to_account_id, amount, description, reference_id })
         });
-        const json = await res.json();
+        const json = await safeJson(res);
         document.getElementById('transferConsole').innerText = JSON.stringify(json, null, 2);
 
         if (res.ok) {
@@ -1527,7 +1550,7 @@
 
       try {
         const res = await apiFetch(url);
-        const json = await res.json();
+        const json = await safeJson(res);
 
         if (res.ok && json.data) {
           currentTransactions = json.data;
@@ -1609,7 +1632,7 @@
       try {
         const dummyId = '00000000-0000-0000-0000-000000000000';
         const res = await apiFetch(`/api/transactions/${dummyId}`, { method: 'DELETE' });
-        const json = await res.json();
+        const json = await safeJson(res);
         if (res.status === 405) {
           showToast(`🛡️ Immutability Verified: Server returned HTTP 405 Method Not Allowed ("${json.error?.message}")`);
         } else {
